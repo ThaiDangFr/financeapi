@@ -53,7 +53,7 @@ function dcPrice(ticker) {
 */
 function dcPrice1y(ticker) {
   var cached = getCache("dcPrice1y@"+ticker);
-  if(cached != null) { return cached; }
+  if(cached != null) { return parseFloat(cached); }
   
   var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
   var dates = Object.keys(data["Time Series (Daily)"]);
@@ -68,7 +68,7 @@ function dcPrice1y(ticker) {
 /* return the price 4 weeks ago */
 function dcPrice4w(ticker) {
   var cached = getCache("dcPrice4w@"+ticker);
-  if(cached != null) { return cached; }  
+  if(cached != null) { return parseFloat(cached); }  
   
   var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
   var dates = Object.keys(data["Time Series (Daily)"]);
@@ -83,7 +83,7 @@ function dcPrice4w(ticker) {
 /* return the price 4 week and 1 year ago */
 function dcPrice4w1y(ticker) {
   var cached = getCache("dcPrice4w1y@"+ticker);
-  if(cached != null) { return cached; }  
+  if(cached != null) { return parseFloat(cached); }  
   
   var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
   var dates = Object.keys(data["Time Series (Daily)"]);
@@ -116,7 +116,7 @@ function dcMom4w(ticker) {
 /* return the 52 weeks hi */
 function dc52weekhi(ticker) {
   var cached = getCache("dc52weekhi@"+ticker);
-  if(cached != null) { return cached; }    
+  if(cached != null) { return parseFloat(cached); }    
   
   var data = urlreq("TIME_SERIES_WEEKLY_ADJUSTED",ticker);
   var dates = Object.keys(data["Weekly Adjusted Time Series"]);
@@ -134,7 +134,7 @@ function dc52weekhi(ticker) {
 /* return the price at a date */
 function dcPriceDate(ticker, date) {
   var cached = getCache("dcPriceDate@"+ticker+"@"+date);
-  if(cached != null) { return cached; }     
+  if(cached != null) { return parseFloat(cached); }     
   
   var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
   var fdate = Utilities.formatDate(new Date(date), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
@@ -149,7 +149,7 @@ function dcPriceDate(ticker, date) {
 /* return the price 1y ago from the date */
 function dcPrice1yDate(ticker, date) {
   var cached = getCache("dcPrice1yDate@"+ticker+"@"+date);
-  if(cached != null) { return cached; }     
+  if(cached != null) { return parseFloat(cached); }     
   
   var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
   var fdate = Utilities.formatDate(new Date(date), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
@@ -175,7 +175,7 @@ function dcMomDate(ticker, date) {
 /* trailing 12 month volume average in millions */
 function dcAvgVol(ticker) {
   var cached = getCache("dcAvgVol@"+ticker);
-  if(cached != null) { return cached; }    
+  if(cached != null) { return parseFloat(cached); }
   
   var data = urlreq("TIME_SERIES_MONTHLY_ADJUSTED",ticker);
   var dates = Object.keys(data["Monthly Adjusted Time Series"]);
