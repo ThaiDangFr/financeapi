@@ -2,6 +2,8 @@
 https://www.alphavantage.co/documentation/#technical-indicators
 https://developers.google.com/apps-script/manifest/sheets
 https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&outputsize=full&apikey=demo
+
+version 14032020
 */
 
 function main() {
