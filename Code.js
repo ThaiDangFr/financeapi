@@ -193,3 +193,57 @@ function dcAvgVol(ticker) {
   setCache("dcAvgVol@"+ticker,avgvol);  
   return avgvol;
 }
+
+/* dump the daily stock quote to spreadsheet */
+function dcDumpDaily(ticker)
+{
+  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
+  var result = new Array();
+  var header = ["", "open", "high", "low", "close", "adjusted close", "volume", "dividend amount", "split coefficient"];
+  result.push(header);
+  
+  var dates = Object.keys(data["Time Series (Daily)"]); 
+  for(i=0;i<dates.length;i++) {
+    var d = dates[i];
+    var v = data["Time Series (Daily)"][d];
+
+    var open = parseFloat(v["1. open"]);
+    var high = parseFloat(v["2. high"]);
+    var low = parseFloat(v["3. low"]);
+    var close = parseFloat(v["4. close"]);
+    var adjclose = parseFloat(v["5. adjusted close"]);
+    var vol = parseInt(v["6. volume"]);
+    var div = parseFloat(v["7. dividend amount"]);
+    var sc = parseFloat(v["8. split coefficient"]);
+    
+    result.push([d, open, high, low, close, adjclose, vol, div, sc]);
+  }
+  
+  return result;
+}
+
+/* search for a ticker */
+function dcSearch(keyword)
+{
+  var data = urlreq("SYMBOL_SEARCH&keywords="+keyword,keyword);
+  var result = new Array();
+  var header = ["symbol","name","type","region","marketOpen","marketClose","timezone","currency","matchScore"];
+  result.push(header);
+  
+  var bm = data["bestMatches"];
+  for(i=0;i<bm.length;i++) {
+    var symbol = bm[i]["1. symbol"];
+    var name = bm[i]["2. name"];
+    var type = bm[i]["3. type"];
+    var region = bm[i]["4. region"];
+    var marketOpen = bm[i]["5. marketOpen"];
+    var marketClose = bm[i]["6. marketClose"];
+    var timezone = bm[i]["7. timezone"];
+    var currency = bm[i]["8. currency"];
+    var matchScore = parseFloat(bm[i]["9. matchScore"]);
+    
+    result.push([symbol, name, type, region, marketOpen, marketClose, timezone, currency, matchScore]);
+  }
+  
+  return result;
+}
