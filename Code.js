@@ -3,15 +3,16 @@ https://www.alphavantage.co/documentation/#technical-indicators
 https://developers.google.com/apps-script/manifest/sheets
 https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&outputsize=full&apikey=demo
 
-version 14032020
+version 15032020
 */
 
-function main() {
+function main() { 
   Logger.log(dcMom("SPY"));
   Logger.log(dcMom4w("SPY"));
   Logger.log(dc52weekhi("SPY"));
   Logger.log(dcMomDate("SPY","2008-02-04"));
   Logger.log(dcAvgVol("SPY"));
+  Logger.log(dumpStats());
 }
 
 
@@ -26,10 +27,31 @@ function getCache(key) {
 }
 
 function setCache(key, value) {
+  var EXPIRATION = 1200; // (20 minutes)
+  
   var cache = CacheService.getScriptCache();
-  cache.put(key, value);
+  cache.put(key, value,EXPIRATION);
+  
+  var sentries = cache.get("@@entries");
+  var stotlen = cache.get("@@totlen");
+  
+  var entries = 0;
+  var totlen = 0;
+  
+  if(sentries != null)  { entries = parseInt(sentries); }
+  if(stotlen != null)   { totlen = parseInt(stotlen); }
+    
+  cache.put("@@entries",entries+1,EXPIRATION); 
+  cache.put("@@totlen",totlen+key.length+value.toString().length,EXPIRATION); 
 }
 
+function cacheStats() {
+  var result = new Array();
+  var header = ["entries","size (max is 100KB)"];
+  result.push(header);  
+  result.push([getCache("@@entries"),getCache("@@totlen")]);
+  return result;
+}
 
 /* fetch url and manage a cache */
 function urlreq(func, ticker) {
@@ -41,10 +63,15 @@ function urlreq(func, ticker) {
     return JSON.parse(txt);
 }
 
-/* return the price (real time, no cache) */
+/* return the price */
 function dcPrice(ticker) {
+  var cached = getCache("dcPrice@"+ticker);
+  if(cached != null) { return parseFloat(cached); }  
+  
   var data = urlreq("GLOBAL_QUOTE", ticker);
   var price = parseFloat(data["Global Quote"]["05. price"]);
+  
+  setCache("dcPrice@"+ticker,price);
   return price;
 }
 
@@ -99,19 +126,29 @@ function dcPrice4w1y(ticker) {
 
 /* return the 12 months momentum */
 function dcMom(ticker) {
+  var cached = getCache("dcMom@"+ticker);
+  if(cached != null) { return parseFloat(cached); }    
+  
   var p = dcPrice(ticker);
   var p1y = dcPrice1y(ticker);
   var mom = p/p1y - 1;
   Logger.log("momentum="+mom);
+  
+  setCache("dcMom@"+ticker,mom);
   return mom;
 }
 
 /* return the 12 months momentum 4 weeks ago */
 function dcMom4w(ticker) {
+  var cached = getCache("dcMom4w@"+ticker);
+  if(cached != null) { return parseFloat(cached); }   
+  
   var p4w = dcPrice4w(ticker);
   var p4w1y = dcPrice4w1y(ticker);
   var mom = p4w/p4w1y - 1;
   Logger.log("momentum="+mom);
+  
+  setCache("dcMom4w@"+ticker,mom);
   return mom;
 }
 
@@ -167,10 +204,15 @@ function dcPrice1yDate(ticker, date) {
 
 /* return the momentum from the date */
 function dcMomDate(ticker, date) {
+  var cached = getCache("dcMomDate@"+ticker+"@"+date);
+  if(cached != null) { return parseFloat(cached); }      
+  
   var pdate = dcPriceDate(ticker, date);
   var pdate1y = dcPrice1yDate(ticker, date);
   var mom = pdate/pdate1y - 1;
   Logger.log("momentum="+mom);
+  
+  setCache("dcMomDate@"+ticker+"@"+date,mom);
   return mom;
 }
 
