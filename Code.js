@@ -32,7 +32,7 @@ function getCache(key) {
 }
 
 function setCache(key, value) {
-  var EXPIRATION = 1200; // (20 minutes)
+  var EXPIRATION = 3600; // (60 minutes)
   
   var cache = CacheService.getScriptCache();
   cache.put(key, value,EXPIRATION);  
