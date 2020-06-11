@@ -3,7 +3,7 @@ https://www.alphavantage.co/documentation/#technical-indicators
 https://developers.google.com/apps-script/manifest/sheets
 https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&outputsize=full&apikey=demo
 
-version 15032020
+version 11062020
 */
 
 function main() { 
@@ -40,6 +40,7 @@ function setCache(key, value) {
 
 /* fetch url */
 function urlreq(func, ticker) {
+    Utilities.sleep(250);
     var apikey = PropertiesService.getScriptProperties().getProperty('apikey');
     var uri = encodeURI("https://www.alphavantage.co/query?function="+func+"&symbol="+ticker+"&apikey="+apikey)
     //Logger.log("uri="+uri);
@@ -50,6 +51,12 @@ function urlreq(func, ticker) {
 
 /* return the price */
 function dcPrice(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcPrice(ticker[i][0])); }    
+    return result; 
+  } 
+  
   var cached = getCache("dcPrice@"+ticker);
   if(cached != null) { return parseFloat(cached); }  
   
@@ -57,6 +64,7 @@ function dcPrice(ticker) {
   var price = parseFloat(data["Global Quote"]["05. price"]);
   
   setCache("dcPrice@"+ticker,price);
+  
   return price;
 }
 
@@ -66,6 +74,12 @@ function dcPrice(ticker) {
 * https://developers.google.com/google-ads/scripts/docs/features/dates
 */
 function dcPrice1y(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcPrice1y(ticker[i][0])); }    
+    return result; 
+  }   
+  
   var cached = getCache("dcPrice1y@"+ticker);
   if(cached != null) { return parseFloat(cached); }
   
@@ -81,6 +95,12 @@ function dcPrice1y(ticker) {
 
 /* return the price 4 weeks ago */
 function dcPrice4w(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcPrice4w(ticker[i][0])); }    
+    return result; 
+  }     
+  
   var cached = getCache("dcPrice4w@"+ticker);
   if(cached != null) { return parseFloat(cached); }  
   
@@ -96,6 +116,12 @@ function dcPrice4w(ticker) {
 
 /* return the price 4 week and 1 year ago */
 function dcPrice4w1y(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcPrice4w1y(ticker[i][0])); }    
+    return result; 
+  }   
+  
   var cached = getCache("dcPrice4w1y@"+ticker);
   if(cached != null) { return parseFloat(cached); }  
   
@@ -111,6 +137,12 @@ function dcPrice4w1y(ticker) {
 
 /* return the 12 months momentum */
 function dcMom(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcMom(ticker[i][0])); }    
+    return result; 
+  }   
+  
   var cached = getCache("dcMom@"+ticker);
   if(cached != null) { return parseFloat(cached); }    
   
@@ -125,6 +157,12 @@ function dcMom(ticker) {
 
 /* return the 12 months momentum 4 weeks ago */
 function dcMom4w(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcMom4w(ticker[i][0])); }    
+    return result; 
+  } 
+  
   var cached = getCache("dcMom4w@"+ticker);
   if(cached != null) { return parseFloat(cached); }   
   
@@ -139,6 +177,12 @@ function dcMom4w(ticker) {
 
 /* return the 52 weeks hi */
 function dc52weekhi(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dc52weekhi(ticker[i][0])); }    
+    return result; 
+  }   
+  
   var cached = getCache("dc52weekhi@"+ticker);
   if(cached != null) { return parseFloat(cached); }    
   
@@ -157,6 +201,12 @@ function dc52weekhi(ticker) {
 
 /* return the price at a date */
 function dcPriceDate(ticker, date) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcPriceDate(ticker[i][0],date)); }    
+    return result; 
+  }   
+  
   var cached = getCache("dcPriceDate@"+ticker+"@"+date);
   if(cached != null) { return parseFloat(cached); }     
   
@@ -172,6 +222,12 @@ function dcPriceDate(ticker, date) {
 
 /* return the price 1y ago from the date */
 function dcPrice1yDate(ticker, date) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcPrice1yDate(ticker[i][0],date)); }    
+    return result; 
+  }    
+  
   var cached = getCache("dcPrice1yDate@"+ticker+"@"+date);
   if(cached != null) { return parseFloat(cached); }     
   
@@ -189,6 +245,12 @@ function dcPrice1yDate(ticker, date) {
 
 /* return the momentum from the date */
 function dcMomDate(ticker, date) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcMomDate(ticker[i][0],date)); }    
+    return result; 
+  }    
+  
   var cached = getCache("dcMomDate@"+ticker+"@"+date);
   if(cached != null) { return parseFloat(cached); }      
   
@@ -203,6 +265,12 @@ function dcMomDate(ticker, date) {
 
 /* trailing 12 month volume average in millions */
 function dcAvgVol(ticker) {
+  if(Array.isArray(ticker)) { 
+    var result = [];
+    for (var i in ticker) { result.push(dcAvgVol(ticker[i][0])); }    
+    return result; 
+  }     
+  
   var cached = getCache("dcAvgVol@"+ticker);
   if(cached != null) { return parseFloat(cached); }
   
