@@ -3,8 +3,18 @@ https://www.alphavantage.co/documentation/#technical-indicators
 https://developers.google.com/apps-script/manifest/sheets
 https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&outputsize=full&apikey=demo
 
-version 11062020
+version 05012023
 */
+
+function YAHOOFINANCE(ticker) {
+  const url = `https://finance.yahoo.com/quote/${ticker}?p=${ticker}`;
+  const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
+  const contentText = res.getContentText();
+  const price = contentText.match(/<fin-streamer(?:.*?)active="">(\d+[,]?[\d\.]+?)<\/fin-streamer>/);
+  console.log(price[1]);
+  return price[1];
+}
+
 
 function main() { 
   Logger.log(dcMom("SPY"));
