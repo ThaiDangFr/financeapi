@@ -6,15 +6,15 @@ https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSF
 version 05012023
 */
 
-function YAHOOFINANCE(ticker) {
-  const url = `https://finance.yahoo.com/quote/${ticker}?p=${ticker}`;
-  const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
-  const contentText = res.getContentText();
-  const price = contentText.match(/<fin-streamer(?:.*?)active="">(\d+[,]?[\d\.]+?)<\/fin-streamer>/);
-  console.log(price[1]);
-  return price[1];
+function YAHOOFINANCE(symbol) {
+  const endpoint = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
+  
+  const response = UrlFetchApp.fetch(endpoint);
+  const data = JSON.parse(response.getContentText());
+  const price = data.quoteResponse.result[0].regularMarketPrice;
+  console.log(price);
+  return price;
 }
-
 
 function main() { 
   Logger.log(dcMom("SPY"));
