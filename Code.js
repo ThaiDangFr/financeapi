@@ -18,11 +18,11 @@ function YAHOOFINANCE(symbol) {
     const price = data.quoteResponse.result[0].regularMarketPrice;
     cache.put(symbol, price,21600);
     console.log("from yahoo:"+symbol+"="+price);
-    return price;
+    return parseFloat(price);
   }
   else {
     console.log("from cache:"+symbol+"="+cprice);
-    return cprice;
+    return parseFloat(cprice);
   }
 }
 
