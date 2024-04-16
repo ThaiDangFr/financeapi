@@ -2,21 +2,41 @@
 https://www.alphavantage.co/documentation/#technical-indicators
 https://developers.google.com/apps-script/manifest/sheets
 https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&outputsize=full&apikey=demo
+https://cryptocointracker.com/yahoo-finance/yahoo-finance-api
 
-version 05012023
+5 mai 2023 : remplacé query1.finance.yahoo.com/v7 par query1.finance.yahoo.com/v6
+https://stackoverflow.com/questions/76059562/yahoo-finance-api-get-quotes-returns-invalid-cookie
+27 mai 2023 : remplacé par du code vu sur https://www.lido.app/tutorials/yahoo-finance-google-sheets
+              passage du cache de 6h à 12h pour voir si ça règle les pbs de Exception: Service invoked too many times for one day: urlfetch.
+28 mai 2023 : passage du cache de 12h à 24h car toujours les mêmes exceptions
+
+16 avril 2024 
+curl -A "Mozilla/5.0 (Linux; Android 10; SM-G996U Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Mobile Safari/537.36" https://finance.yahoo.com/quote/CE > quote.txt
+<fin-streamer class="livePrice svelte-mgkamr" data-symbol="CE" data-testid="qsp-price" data-field="regularMarketPrice" data-trend="none" data-pricehint="2" data-value="155" active><span>155.00</span></fin-streamer>
 */
 
-/* fetch from yahoo or from the cache */
 function YAHOOFINANCE(symbol) {
-  var cache = CacheService.getUserCache();
+  var cache = CacheService.getScriptCache(); // CacheService.getUserCache();
   cprice = cache.get(symbol);
 
   if(cprice == null) {
+    /*
     const endpoint = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
     const response = UrlFetchApp.fetch(endpoint);
     const data = JSON.parse(response.getContentText());
     const price = data.quoteResponse.result[0].regularMarketPrice;
-    cache.put(symbol, price,21600);
+    */
+    
+    const url = `https://finance.yahoo.com/quote/${symbol}?p=${symbol}`;
+    const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
+    const contentText = res.getContentText();
+    //const price_tab = contentText.match(/<fin-streamer(?:.*?)active="">(\d+[,]?[\d\.]+?)<\/fin-streamer>/);
+    const price_tab = contentText.match(/<fin-streamer(?:.*?)active><span>(\d+[,]?[\d\.]+?)<\/span><\/fin-streamer>/);
+    //console.log(price_tab)
+    const price = price_tab[1].replace(/\,/g,'')
+
+    //cache.put(symbol, price,21600);
+    cache.put(symbol, price,86400);
     console.log("from yahoo:"+symbol+"="+price);
     return parseFloat(price);
   }
@@ -26,13 +46,18 @@ function YAHOOFINANCE(symbol) {
   }
 }
 
-function main() { 
+
+
+function main() {
+  Logger.log(YAHOOFINANCE("JNJ"))
+  /* 
   Logger.log(dcMom("SPY"));
   Logger.log(dcMom4w("SPY"));
   Logger.log(dc52weekhi("SPY"));
   Logger.log(dcMomDate("SPY","2008-02-04"));
   Logger.log(dcAvgVol("SPY"));
   Logger.log(dcPrice("^FCHI"));
+  */
 }
 
 function getAllMethods(object) {
