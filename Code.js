@@ -33,7 +33,7 @@ function YAHOOFINANCE(symbol) {
     const url = `https://finance.yahoo.com/quote/${symbol}?p=${symbol}`;
     const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
     const contentText = res.getContentText();
-    const pattern = /<fin-streamer\b(?:.*?)data-symbol=".*?"(?:.*?)data-value="(\d+\.?\d*)(?:.*?)data-field="regularMarketPreviousClose"(?:.*?)"/;
+    const pattern = /<fin-streamer\b(?:.*?)data-symbol=".*?"(?:.*?)data-value="(\d+[,]?[\d\.]+?)"(?:.*?)data-field="regularMarketPreviousClose"(?:.*?)"/;
     const price_tab = contentText.match(pattern);
     //console.log(price_tab)
     const price = price_tab[1].replace(/\,/g,'')
