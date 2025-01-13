@@ -35,7 +35,7 @@ function YAHOOFINANCE(symbol) {
     const contentText = res.getContentText();
     const pattern = /<fin-streamer\b(?:.*?)data-symbol=".*?"(?:.*?)data-value="(\d+[,]?[\d\.]+?)"(?:.*?)data-field="regularMarketPreviousClose"(?:.*?)"/;
     const price_tab = contentText.match(pattern);
-    //console.log(price_tab)
+    console.log(price_tab)
     const price = price_tab[1].replace(/\,/g,'')
 
     //cache.put(symbol, price,21600);
@@ -50,9 +50,19 @@ function YAHOOFINANCE(symbol) {
 }
 
 
-
+// Tests unitaires
 function main() {
-  Logger.log(YAHOOFINANCE("JNJ"))
+  var cache = CacheService.getScriptCache();
+
+  cache.remove("NVR");
+  p1 = YAHOOFINANCE("NVR")
+  console.log(p1)
+
+  // https://finance.yahoo.com/quote/%5ETNX/
+  cache.remove("%5ETNX");
+  p2 = YAHOOFINANCE("%5ETNX")
+  console.log(p2)
+  
   /* 
   Logger.log(dcMom("SPY"));
   Logger.log(dcMom4w("SPY"));
