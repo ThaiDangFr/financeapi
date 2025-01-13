@@ -13,6 +13,9 @@ https://stackoverflow.com/questions/76059562/yahoo-finance-api-get-quotes-return
 16 avril 2024 
 curl -A "Mozilla/5.0 (Linux; Android 10; SM-G996U Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Mobile Safari/537.36" https://finance.yahoo.com/quote/CE > quote.txt
 <fin-streamer class="livePrice svelte-mgkamr" data-symbol="CE" data-testid="qsp-price" data-field="regularMarketPrice" data-trend="none" data-pricehint="2" data-value="155" active><span>155.00</span></fin-streamer>
+
+13 janvier 2025
+j'ai utilisé voir le code code source de https://finance.yahoo.com/quote/ROL/ avec une recherche sur data-field="regularMarketPreviousClose" et copilot pour trouver le pattern
 */
 
 function YAHOOFINANCE(symbol) {
@@ -30,8 +33,8 @@ function YAHOOFINANCE(symbol) {
     const url = `https://finance.yahoo.com/quote/${symbol}?p=${symbol}`;
     const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
     const contentText = res.getContentText();
-    //const price_tab = contentText.match(/<fin-streamer(?:.*?)active="">(\d+[,]?[\d\.]+?)<\/fin-streamer>/);
-    const price_tab = contentText.match(/<fin-streamer(?:.*?)active><span>(\d+[,]?[\d\.]+?)<\/span><\/fin-streamer>/);
+    const pattern = /<fin-streamer\b(?:.*?)data-symbol=".*?"(?:.*?)data-value="(\d+\.?\d*)(?:.*?)data-field="regularMarketPreviousClose"(?:.*?)"/;
+    const price_tab = contentText.match(pattern);
     //console.log(price_tab)
     const price = price_tab[1].replace(/\,/g,'')
 
