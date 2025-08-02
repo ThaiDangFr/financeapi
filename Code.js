@@ -1,54 +1,86 @@
 /*
-https://www.alphavantage.co/documentation/#technical-indicators
-https://developers.google.com/apps-script/manifest/sheets
-https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=MSFT&outputsize=full&apikey=demo
-https://cryptocointracker.com/yahoo-finance/yahoo-finance-api
+https://appscript.dev/apps-script-tutorials/string-objects-in-apps-script/match-method/
 
-5 mai 2023 : remplacé query1.finance.yahoo.com/v7 par query1.finance.yahoo.com/v6
-https://stackoverflow.com/questions/76059562/yahoo-finance-api-get-quotes-returns-invalid-cookie
-27 mai 2023 : remplacé par du code vu sur https://www.lido.app/tutorials/yahoo-finance-google-sheets
-              passage du cache de 6h à 12h pour voir si ça règle les pbs de Exception: Service invoked too many times for one day: urlfetch.
-28 mai 2023 : passage du cache de 12h à 24h car toujours les mêmes exceptions
+28 mai 2023 : remplacé par du code vu sur https://www.lido.app/tutorials/yahoo-finance-google-sheets
+              passage du cache de 12h à 24h pour voir si ça règle les pbs de Exception: Service invoked too many times for one day: urlfetch.
 
 16 avril 2024 
 curl -A "Mozilla/5.0 (Linux; Android 10; SM-G996U Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Mobile Safari/537.36" https://finance.yahoo.com/quote/CE > quote.txt
-<fin-streamer class="livePrice svelte-mgkamr" data-symbol="CE" data-testid="qsp-price" data-field="regularMarketPrice" data-trend="none" data-pricehint="2" data-value="155" active><span>155.00</span></fin-streamer>
+<fin-streamer class="livePrice svelte-mgkamr" data-symbol="CE" data-testid="qsp-price" data-field="regularMarketPrice" data-trend="none" data-pricehint="2" data-value="155" active><span>155.00</span></fin-streamer>       
+
 
 13 janvier 2025
 j'ai utilisé voir le code code source de https://finance.yahoo.com/quote/ROL/ avec une recherche sur data-field="regularMarketPreviousClose" et copilot pour trouver le pattern
+
+2 juillet 2025
+finnhub permet 60 req par minutes (mais ne couvre ques les actions et etf US)
+curl "https://finnhub.io/api/v1/quote?symbol=AAPL&token=d1ioa2hr01qhbuvr8sfgd1ioa2hr01qhbuvr8sg0" | jq -e -r '.c'
+
+2 aout 2025
+retour sur yahoo finance avec le endpoint `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
 */
 
-function YAHOOFINANCE(symbol) {
+
+function FINNHUB(symbol) {
   var cache = CacheService.getScriptCache(); // CacheService.getUserCache();
   cprice = cache.get(symbol);
 
-  if(cprice == null) {
-    /*
-    const endpoint = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbol}`;
+  if (cprice == null) {
+
+    const endpoint = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=d1ioa2hr01qhbuvr8sfgd1ioa2hr01qhbuvr8sg0`;
     const response = UrlFetchApp.fetch(endpoint);
     const data = JSON.parse(response.getContentText());
-    const price = data.quoteResponse.result[0].regularMarketPrice;
-    */
-    
-    const url = `https://finance.yahoo.com/quote/${symbol}?p=${symbol}`;
-    const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
-    const contentText = res.getContentText();
-    const pattern = /<fin-streamer\b(?:.*?)data-symbol=".*?"(?:.*?)data-value="(\d+[,]?[\d\.]+?)"(?:.*?)data-field="regularMarketPreviousClose"(?:.*?)"/;
-    const price_tab = contentText.match(pattern);
-    console.log(price_tab)
-    const price = price_tab[1].replace(/\,/g,'')
+    const price = data.c;
+
 
     //cache.put(symbol, price,21600);
-    cache.put(symbol, price,86400);
-    console.log("from yahoo:"+symbol+"="+price);
+    cache.put(symbol, price, 86400);
+    console.log("from yahoo:" + symbol + "=" + price);
     return parseFloat(price);
   }
   else {
-    console.log("from cache:"+symbol+"="+cprice);
+    console.log("from cache:" + symbol + "=" + cprice);
     return parseFloat(cprice);
   }
 }
 
+
+function YAHOOFINANCE(symbol) {
+  var cache = CacheService.getScriptCache();
+  cprice = cache.get(symbol);
+
+  if (cprice == null) {
+
+    const endpoint = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    const response = UrlFetchApp.fetch(endpoint);
+    //console.log(response.getContentText())
+    const data = JSON.parse(response.getContentText());
+    const price = data.chart.result[0].meta.regularMarketPrice;
+
+    /*
+    const url = `https://finance.yahoo.com/quote/${symbol}?p=${symbol}`;
+    const res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
+    const contentText = res.getContentText();
+    //const price_tab = contentText.match(/<fin-streamer(?:.*?)active="">(\d+[,]?[\d\.]+?)<\/fin-streamer>/);
+    //const price_tab = contentText.match(/<fin-streamer(?:.*?)active><span>(\d+[,]?[\d\.]+?)<\/span><\/fin-streamer>/);
+  
+    const pattern = /<fin-streamer\b(?:.*?)data-symbol=".*?"(?:.*?)data-value="(\d+[,]?[\d\.]+?)"(?:.*?)data-field="regularMarketPreviousClose"(?:.*?)"/;
+    const price_tab = contentText.match(pattern);
+
+    console.log(price_tab)
+    const price = price_tab[1].replace(/\,/g,'');
+    */
+
+    //cache.put(symbol, price,21600);
+    cache.put(symbol, price, 86400);
+    console.log("from yahoo:" + symbol + "=" + price);
+    return parseFloat(price);
+  }
+  else {
+    console.log("from cache:" + symbol + "=" + cprice);
+    return parseFloat(cprice);
+  }
+}
 
 // Tests unitaires
 function main() {
@@ -62,343 +94,4 @@ function main() {
   cache.remove("%5ETNX");
   p2 = YAHOOFINANCE("%5ETNX")
   console.log(p2)
-  
-  /* 
-  Logger.log(dcMom("SPY"));
-  Logger.log(dcMom4w("SPY"));
-  Logger.log(dc52weekhi("SPY"));
-  Logger.log(dcMomDate("SPY","2008-02-04"));
-  Logger.log(dcAvgVol("SPY"));
-  Logger.log(dcPrice("^FCHI"));
-  */
-}
-
-function getAllMethods(object) {
-    return Object.getOwnPropertyNames(object).filter(function(property) {
-        return typeof object[property] == 'function';
-    });
-}
-
-function getCache(key) {
-  var cache = CacheService.getScriptCache();
-  var cached = cache.get(key);
-  if (cached != null) 
-  {
-    return cached;
-  }
-  else { return null; }
-}
-
-function setCache(key, value) {
-  var EXPIRATION = 3600; // (60 minutes)
-  
-  var cache = CacheService.getScriptCache();
-  cache.put(key, value,EXPIRATION);  
-}
-
-/* fetch url */
-function urlreq(func, ticker) {
-    Utilities.sleep(250);
-    var apikey = PropertiesService.getScriptProperties().getProperty('apikey');
-    var uri = encodeURI("https://www.alphavantage.co/query?function="+func+"&symbol="+ticker+"&apikey="+apikey)
-    //Logger.log("uri="+uri);
-    var response = UrlFetchApp.fetch(uri);
-    var txt = response.getContentText();
-    return JSON.parse(txt);
-}
-
-/* return the price */
-function dcPrice(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcPrice(ticker[i][0])); }    
-    return result; 
-  } 
-  
-  var cached = getCache("dcPrice@"+ticker);
-  if(cached != null) { return parseFloat(cached); }  
-  
-  var data = urlreq("GLOBAL_QUOTE", ticker);
-  var price = parseFloat(data["Global Quote"]["05. price"]);
-  
-  setCache("dcPrice@"+ticker,price);
-  
-  return price;
-}
-
-
-/* 
-* return the price 1 year ago 
-* https://developers.google.com/google-ads/scripts/docs/features/dates
-*/
-function dcPrice1y(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcPrice1y(ticker[i][0])); }    
-    return result; 
-  }   
-  
-  var cached = getCache("dcPrice1y@"+ticker);
-  if(cached != null) { return parseFloat(cached); }
-  
-  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
-  var dates = Object.keys(data["Time Series (Daily)"]);
-  var day1yago = dates[252];
-  var adjclose = parseFloat(data["Time Series (Daily)"][day1yago]["5. adjusted close"]);
-  Logger.log("day1yago="+day1yago+" adjclose="+adjclose);
-  
-  setCache("dcPrice1y@"+ticker,adjclose);
-  return adjclose;
-}
-
-/* return the price 4 weeks ago */
-function dcPrice4w(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcPrice4w(ticker[i][0])); }    
-    return result; 
-  }     
-  
-  var cached = getCache("dcPrice4w@"+ticker);
-  if(cached != null) { return parseFloat(cached); }  
-  
-  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
-  var dates = Object.keys(data["Time Series (Daily)"]);
-  var day4wago = dates[20];  
-  var adjclose = parseFloat(data["Time Series (Daily)"][day4wago]["5. adjusted close"]);
-  Logger.log("day4wago="+day4wago+" adjclose="+adjclose);
-  
-  setCache("dcPrice4w@"+ticker,adjclose);
-  return adjclose;
-}
-
-/* return the price 4 week and 1 year ago */
-function dcPrice4w1y(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcPrice4w1y(ticker[i][0])); }    
-    return result; 
-  }   
-  
-  var cached = getCache("dcPrice4w1y@"+ticker);
-  if(cached != null) { return parseFloat(cached); }  
-  
-  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
-  var dates = Object.keys(data["Time Series (Daily)"]);
-  var day4w1yago = dates[272];
-  var adjclose = parseFloat(data["Time Series (Daily)"][day4w1yago]["5. adjusted close"]);
-  Logger.log("day4w1yago="+day4w1yago+" adjclose="+adjclose);
-  
-  setCache("dcPrice4w1y@"+ticker,adjclose);
-  return adjclose;  
-}
-
-/* return the 12 months momentum */
-function dcMom(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcMom(ticker[i][0])); }    
-    return result; 
-  }   
-  
-  var cached = getCache("dcMom@"+ticker);
-  if(cached != null) { return parseFloat(cached); }    
-  
-  var p = dcPrice(ticker);
-  var p1y = dcPrice1y(ticker);
-  var mom = p/p1y - 1;
-  Logger.log("momentum="+mom);
-  
-  setCache("dcMom@"+ticker,mom);
-  return mom;
-}
-
-/* return the 12 months momentum 4 weeks ago */
-function dcMom4w(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcMom4w(ticker[i][0])); }    
-    return result; 
-  } 
-  
-  var cached = getCache("dcMom4w@"+ticker);
-  if(cached != null) { return parseFloat(cached); }   
-  
-  var p4w = dcPrice4w(ticker);
-  var p4w1y = dcPrice4w1y(ticker);
-  var mom = p4w/p4w1y - 1;
-  Logger.log("momentum="+mom);
-  
-  setCache("dcMom4w@"+ticker,mom);
-  return mom;
-}
-
-/* return the 52 weeks hi */
-function dc52weekhi(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dc52weekhi(ticker[i][0])); }    
-    return result; 
-  }   
-  
-  var cached = getCache("dc52weekhi@"+ticker);
-  if(cached != null) { return parseFloat(cached); }    
-  
-  var data = urlreq("TIME_SERIES_WEEKLY_ADJUSTED",ticker);
-  var dates = Object.keys(data["Weekly Adjusted Time Series"]);
-  var hi = 0;
-  for(i=0;i<=52;i++) {
-    d = parseFloat(data["Weekly Adjusted Time Series"][dates[i]]["2. high"]);
-    if(d > hi) { hi = d }
-  }
-  Logger.log("high52="+hi);
-  
-  setCache("dc52weekhi@"+ticker,hi);
-  return hi;
-}
-
-/* return the price at a date */
-function dcPriceDate(ticker, date) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcPriceDate(ticker[i][0],date)); }    
-    return result; 
-  }   
-  
-  var cached = getCache("dcPriceDate@"+ticker+"@"+date);
-  if(cached != null) { return parseFloat(cached); }     
-  
-  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
-  var fdate = Utilities.formatDate(new Date(date), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
-  //Logger.log("date="+date+" fdate="+fdate);
-  var adjclose = parseFloat(data["Time Series (Daily)"][fdate]["5. adjusted close"]);
-  Logger.log("fdate="+fdate+" adjclose="+adjclose);
-  
-  setCache("dcPriceDate@"+ticker+"@"+date,adjclose);
-  return adjclose;
-}
-
-/* return the price 1y ago from the date */
-function dcPrice1yDate(ticker, date) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcPrice1yDate(ticker[i][0],date)); }    
-    return result; 
-  }    
-  
-  var cached = getCache("dcPrice1yDate@"+ticker+"@"+date);
-  if(cached != null) { return parseFloat(cached); }     
-  
-  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
-  var fdate = Utilities.formatDate(new Date(date), SpreadsheetApp.getActive().getSpreadsheetTimeZone(), "yyyy-MM-dd");
-  var dates = Object.keys(data["Time Series (Daily)"]);
-  var idx = dates.indexOf(fdate);
-  var date1y = dates[idx + 252];
-  var adjclose = parseFloat(data["Time Series (Daily)"][date1y]["5. adjusted close"]);
-  Logger.log("idx="+idx+" date1y="+date1y+" adjclose="+adjclose);
-  
-  setCache("dcPrice1yDate@"+ticker+"@"+date,adjclose);  
-  return adjclose;
-}
-
-/* return the momentum from the date */
-function dcMomDate(ticker, date) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcMomDate(ticker[i][0],date)); }    
-    return result; 
-  }    
-  
-  var cached = getCache("dcMomDate@"+ticker+"@"+date);
-  if(cached != null) { return parseFloat(cached); }      
-  
-  var pdate = dcPriceDate(ticker, date);
-  var pdate1y = dcPrice1yDate(ticker, date);
-  var mom = pdate/pdate1y - 1;
-  Logger.log("momentum="+mom);
-  
-  setCache("dcMomDate@"+ticker+"@"+date,mom);
-  return mom;
-}
-
-/* trailing 12 month volume average in millions */
-function dcAvgVol(ticker) {
-  if(Array.isArray(ticker)) { 
-    var result = [];
-    for (var i in ticker) { result.push(dcAvgVol(ticker[i][0])); }    
-    return result; 
-  }     
-  
-  var cached = getCache("dcAvgVol@"+ticker);
-  if(cached != null) { return parseFloat(cached); }
-  
-  var data = urlreq("TIME_SERIES_MONTHLY_ADJUSTED",ticker);
-  var dates = Object.keys(data["Monthly Adjusted Time Series"]);
-  
-  var totvol = 0;
-  for(i=0;i<=12;i++) {
-    var day = dates[i];
-    var mvol = parseInt(data["Monthly Adjusted Time Series"][day]["6. volume"]);
-    totvol += mvol;
-    //Logger.log("day="+day+" mvol="+mvol+" totvol="+totvol);
-  }
-  var avgvol = (totvol/13)/1000000;
-  Logger.log("avgvol="+avgvol);
-  
-  setCache("dcAvgVol@"+ticker,avgvol);  
-  return avgvol;
-}
-
-/* dump the daily stock quote to spreadsheet */
-function dcDumpDaily(ticker)
-{
-  var data = urlreq("TIME_SERIES_DAILY_ADJUSTED&outputsize=full",ticker);
-  var result = new Array();
-  var header = ["", "open", "high", "low", "close", "adjusted close", "volume", "dividend amount", "split coefficient"];
-  result.push(header);
-  
-  var dates = Object.keys(data["Time Series (Daily)"]); 
-  for(i=0;i<dates.length;i++) {
-    var d = dates[i];
-    var v = data["Time Series (Daily)"][d];
-
-    var open = parseFloat(v["1. open"]);
-    var high = parseFloat(v["2. high"]);
-    var low = parseFloat(v["3. low"]);
-    var close = parseFloat(v["4. close"]);
-    var adjclose = parseFloat(v["5. adjusted close"]);
-    var vol = parseInt(v["6. volume"]);
-    var div = parseFloat(v["7. dividend amount"]);
-    var sc = parseFloat(v["8. split coefficient"]);
-    
-    result.push([d, open, high, low, close, adjclose, vol, div, sc]);
-  }
-  
-  return result;
-}
-
-/* search for a ticker */
-function dcSearch(keyword)
-{
-  var data = urlreq("SYMBOL_SEARCH&keywords="+keyword,keyword);
-  var result = new Array();
-  var header = ["symbol","name","type","region","marketOpen","marketClose","timezone","currency","matchScore"];
-  result.push(header);
-  
-  var bm = data["bestMatches"];
-  for(i=0;i<bm.length;i++) {
-    var symbol = bm[i]["1. symbol"];
-    var name = bm[i]["2. name"];
-    var type = bm[i]["3. type"];
-    var region = bm[i]["4. region"];
-    var marketOpen = bm[i]["5. marketOpen"];
-    var marketClose = bm[i]["6. marketClose"];
-    var timezone = bm[i]["7. timezone"];
-    var currency = bm[i]["8. currency"];
-    var matchScore = parseFloat(bm[i]["9. matchScore"]);
-    
-    result.push([symbol, name, type, region, marketOpen, marketClose, timezone, currency, matchScore]);
-  }
-  
-  return result;
 }
